@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Timeline</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #000; color: #fff; }
+        .header { background: #1a1a1a; padding: 1rem; text-align: center; border-bottom: 1px solid #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 1rem; }
+        .tweet { background: #1a1a1a; padding: 1rem; margin: 1rem 0; border-radius: 12px; border: 1px solid #333; }
+        .user { display: flex; align-items: center; margin-bottom: 0.75rem; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; margin-right: 0.75rem; }
+        .username { font-weight: bold; font-size: 1rem; }
+        .handle { color: #71767b; margin-left: 0.5rem; }
+        .text { margin: 0.75rem 0; line-height: 1.5; font-size: 1rem; }
+        .stats { display: flex; gap: 2rem; color: #71767b; font-size: 0.9rem; margin-top: 0.75rem; }
+        .refresh-btn { background: #1d9bf0; color: white; border: none; padding: 12px 24px; border-radius: 20px; cursor: pointer; margin-bottom: 1rem; font-size: 1rem; }
+        .loading { text-align: center; padding: 3rem; color: #71767b; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Twitter Timeline</h1>
+    </div>
+    <div class="container">
+        <button class="refresh-btn" onclick="loadTweets()">最新取得</button>
+        <div id="timeline" class="loading">読み込み中...</div>
+    </div>
+    <script>
+        const WEBHOOK_URL = 'YOUR_N8N_WEBHOOK_URL_HERE';
+        
+        async function loadTweets() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '<div class="loading">読み込み中...</div>';
+            
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        users: ['jack'],
+                        count: 20
+                    })
+                });
+                
+                const result = await response.json();
+                const data = Array.isArray(result) ? result[0] : result;
+                
+                if (data.success && data.tweets.length > 0) {
+                    timeline.innerHTML = '';
+                    data.tweets.forEach(tweet => {
+                        timeline.appendChild(createTweetElement(tweet));
+                    });
+                } else {
+                    timeline.innerHTML = '<div class="loading">ツイートが見つかりませんでした</div>';
+                }
+            } catch (error) {
+                timeline.innerHTML = '<div class="loading">エラーが発生しました</div>';
+            }
+        }
+        
+        function createTweetElement(tweet) {
+            const div = document.createElement('div');
+            div.className = 'tweet';
+            
+            div.innerHTML = `
+                <div class="user">
+                    <img class="avatar" src="${tweet.author.profilePic}" alt="${tweet.author.name}">
+                    <div>
+                        <span class="username">${tweet.author.name}</span>
+                        <span class="handle">@${tweet.author.username}</span>
+                    </div>
+                </div>
+                <div class="text">${tweet.text}</div>
+                <div class="stats">
+                    <span>💬 ${tweet.public_metrics.reply_count}</span>
+                    <span>🔁 ${tweet.public_metrics.retweet_count}</span>
+                    <span>❤️ ${tweet.public_metrics.like_count}</span>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        loadTweets();
+    </script>
+</body>
+</html>
