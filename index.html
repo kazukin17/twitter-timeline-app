@@ -1,298 +1,53 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>タイムライン</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #000;
-            color: #fff;
-            line-height: 1.6;
-            padding-bottom: 100px;
+[
+    {
+        "id": "1",
+        "author": {
+            "name": "山田 太郎",
+            "username": "yamada_tarou",
+            "profilePic": "https://pbs.twimg.com/profile_images/1661201415899951105/azNjKOSH_400x400.jpg",
+            "verified": true,
+            "followers_count": 6000000
+        },
+        "text": "こんにちは、世界！",
+        "created_at": "2023-10-27T10:00:00Z",
+        "public_metrics": {
+            "retweet_count": 12345,
+            "reply_count": 5678,
+            "like_count": 98765
         }
-        .header {
-            background: #1a1a1a;
-            padding: 1rem;
-            text-align: center;
-            border-bottom: 1px solid #333;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+    },
+    {
+        "id": "2",
+        "author": {
+            "name": "花子",
+            "username": "hanako_t",
+            "profilePic": "https://pbs.twimg.com/profile_images/1683405903932239872/gYkYf9_2_400x400.jpg",
+            "verified": false,
+            "followers_count": 150000000
+        },
+        "text": "新しいプロジェクトが始まりました！",
+        "created_at": "2023-10-27T11:00:00Z",
+        "public_metrics": {
+            "retweet_count": 50000,
+            "reply_count": 15000,
+            "like_count": 250000
         }
-        .followers-row {
-            display: flex;
-            overflow-x: auto;
-            padding: 1rem;
-            gap: 1rem;
-            background: #111;
-            border-bottom: 1px solid #333;
-            -webkit-overflow-scrolling: touch;
+    },
+    {
+        "id": "3",
+        "author": {
+            "name": "ケン",
+            "username": "ken_k",
+            "profilePic": "https://pbs.twimg.com/profile_images/1535420431766946816/WbK9e_Lp_400x400.jpg",
+            "verified": false,
+            "followers_count": 14000000
+        },
+        "text": "今日の天気は晴れです。",
+        "created_at": "2023-10-27T12:00:00Z",
+        "public_metrics": {
+            "retweet_count": 8000,
+            "reply_count": 2500,
+            "like_count": 55000
         }
-        .follower-item {
-            text-align: center;
-            cursor: pointer;
-            min-width: 70px;
-            position: relative;
-            transition: transform 0.2s;
-        }
-        .follower-item:hover { transform: scale(1.05); }
-        .avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            color: #fff;
-            border: 2px solid transparent;
-            background-color: #666; /* Fallback color */
-        }
-        .follower-item.selected .avatar { border-color: #1d9bf0; }
-        .username { font-size: 0.7rem; }
-        .checkmark {
-            position: absolute;
-            top: -5px;
-            right: 0;
-            background: #1d9bf0;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: #fff;
-        }
-        .checkmark.selected { display: flex; }
-        .timeline {
-            padding: 1rem;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .tweet-card {
-            background: #1a1a1a;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            border-radius: 12px;
-            border: 1px solid #333;
-            transition: background 0.2s;
-        }
-        .tweet-card:hover { background: #222; }
-        .tweet-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        .user-info { margin-left: 0.75rem; flex: 1; }
-        .display-name {
-            font-weight: bold;
-            font-size: 1rem;
-        }
-        .tweet-content {
-            margin: 1rem 0;
-            line-height: 1.5;
-            font-size: 1rem;
-        }
-        .tweet-media {
-            width: 100%;
-            max-height: 400px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin: 1rem 0;
-        }
-        .tweet-stats {
-            display: flex;
-            gap: 2rem;
-            color: #666;
-            font-size: 0.9rem;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #333;
-        }
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #1a1a1a;
-            display: flex;
-            justify-content: space-around;
-            padding: 1rem;
-            border-top: 1px solid #333;
-        }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: #666;
-            font-size: 0.8rem;
-        }
-        .nav-item.active { color: #1d9bf0; }
-
-        /* Loading state */
-        .loading-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1d9bf0;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>タイムライン</h1>
-        <p class="tweet-count" style="color: #666; font-size: 0.9rem;">ツイートを読み込み中...</p>
-    </div>
-    <div class="followers-row"></div>
-    <div class="timeline">
-        <div class="loading-container">
-            <div class="loading-spinner"></div>
-        </div>
-    </div>
-    <div class="bottom-nav">
-        <div class="nav-item active">
-            <span>🏠</span>
-            <span>ホーム</span>
-        </div>
-        <div class="nav-item">
-            <span>🔍</span>
-            <span>検索</span>
-        </div>
-        <div class="nav-item">
-            <span>👥</span>
-            <span>フォロワー</span>
-        </div>
-    </div>
-    <script>
-        const userColors = {
-            'jack': '#8B5CF6',
-            'elonmusk': '#F472B6',
-            'tim_cook': '#2DD4BF',
-            'yamada_tarou': '#A78BFA',
-            'hanako_t': '#F472B6'
-        };
-
-        function formatNumber(num) {
-            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-            return num.toString();
-        }
-
-        function createFollowerItem(author) {
-            const initials = author.name.split(' ').map(n => n[0]).join('');
-            const item = document.createElement('div');
-            item.className = 'follower-item selected';
-            item.dataset.username = author.username;
-            item.innerHTML = `
-                <div class="avatar" style="background: ${userColors[author.username] || '#666'}">
-                    ${initials}
-                </div>
-                <span class="username">@${author.username}</span>
-                <div class="checkmark selected">✓</div>
-            `;
-            item.onclick = () => filterByUser(author.username);
-            return item;
-        }
-
-        function createTweetCard(tweet) {
-            const author = tweet.author;
-            const initials = author.name.split(' ').map(n => n[0]).join('');
-            const card = document.createElement('div');
-            card.className = 'tweet-card';
-            card.dataset.user = author.username;
-            
-            const mediaHtml = tweet.media ? `<img src="${tweet.media}" class="tweet-media" />` : '';
-            const verifiedIcon = author.verified ? '<span style="color:#1d9bf0;">✓</span>' : '';
-            
-            card.innerHTML = `
-                <div class="tweet-header">
-                    <img src="${author.profilePic}" onerror="this.onerror=null;this.src='https://placehold.co/50x50/666/fff?text=${initials}'" class="avatar" style="background: none; border: none; object-fit: cover;"/>
-                    <div class="user-info">
-                        <div class="display-name">${author.name} ${verifiedIcon}</div>
-                        <div class="username">@${author.username}</div>
-                        <div class="time">${new Date(tweet.created_at).toLocaleString('ja-JP')}</div>
-                    </div>
-                </div>
-                <div class="tweet-content">${tweet.text}</div>
-                ${mediaHtml}
-                <div class="tweet-stats">
-                    <span>💬 ${formatNumber(tweet.public_metrics.reply_count)}</span>
-                    <span>🔁 ${formatNumber(tweet.public_metrics.retweet_count)}</span>
-                    <span>❤️ ${formatNumber(tweet.public_metrics.like_count)}</span>
-                </div>
-            `;
-            return card;
-        }
-
-        function filterByUser(username) {
-            const followers = document.querySelectorAll('.follower-item');
-            const tweets = document.querySelectorAll('.tweet-card');
-            
-            const selectedItem = document.querySelector(`.follower-item[data-username='${username}']`);
-            selectedItem.classList.toggle('selected');
-            selectedItem.querySelector('.checkmark').classList.toggle('selected');
-            
-            const selectedUsers = Array.from(followers)
-                .filter(item => item.classList.contains('selected'))
-                .map(item => item.dataset.username);
-                
-            tweets.forEach(tweet => {
-                const user = tweet.dataset.user;
-                if (selectedUsers.length === 0 || selectedUsers.includes(user)) {
-                    tweet.style.display = 'block';
-                } else {
-                    tweet.style.display = 'none';
-                }
-            });
-        }
-        
-        async function loadTimeline() {
-            try {
-                // Fetch the JSON data from the GitHub Pages URL
-                const response = await fetch('data/tweets.json');
-                if (!response.ok) {
-                    throw new Error('Failed to fetch tweets.json');
-                }
-                const tweets = await response.json();
-
-                const timelineContainer = document.querySelector('.timeline');
-                const followersContainer = document.querySelector('.followers-row');
-                const tweetCountElement = document.querySelector('.tweet-count');
-                
-                timelineContainer.innerHTML = ''; // Clear loading spinner
-                followersContainer.innerHTML = '';
-                
-                const uniqueUsers = [...new Map(tweets.map(tweet => [tweet.author.username, tweet.author])).values()];
-                uniqueUsers.forEach(user => followersContainer.appendChild(createFollowerItem(user)));
-
-                tweets.forEach(tweet => timelineContainer.appendChild(createTweetCard(tweet)));
-                
-                tweetCountElement.textContent = `${tweets.length}件のツイート`;
-            } catch (error) {
-                console.error("Error loading timeline:", error);
-                document.querySelector('.timeline').innerHTML = `<p style="text-align:center;color:red;">データの読み込みに失敗しました。時間をおいて再度お試しください。</p>`;
-                document.querySelector('.tweet-count').textContent = 'エラー';
-            }
-        }
-
-        window.onload = loadTimeline;
-    </script>
-</body>
-</html>
+    }
+]
