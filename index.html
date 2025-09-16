@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タイムライン</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: #000; 
+            color: #fff; 
+            line-height: 1.6;
+        }
+        .header { 
+            background: #1a1a1a; 
+            padding: 1rem; 
+            text-align: center; 
+            border-bottom: 1px solid #333;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .followers-row { 
+            display: flex; 
+            overflow-x: auto; 
+            padding: 1rem; 
+            gap: 1rem; 
+            background: #111;
+            border-bottom: 1px solid #333;
+        }
+        .follower-item { 
+            text-align: center; 
+            cursor: pointer; 
+            min-width: 70px;
+            position: relative;
+            transition: transform 0.2s;
+        }
+        .follower-item:hover { transform: scale(1.05); }
+        .avatar { 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            margin-bottom: 0.5rem;
+            color: #fff;
+            border: 2px solid transparent;
+        }
+        .follower-item.selected .avatar { border-color: #1d9bf0; }
+        .username { font-size: 0.7rem; }
+        .checkmark { 
+            position: absolute; 
+            top: -5px; 
+            right: 0; 
+            background: #1d9bf0; 
+            border-radius: 50%; 
+            width: 20px; 
+            height: 20px; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 12px;
+        }
+        .checkmark.selected { display: flex; }
+        .timeline { 
+            padding: 1rem; 
+            max-width: 600px; 
+            margin: 0 auto;
+            padding-bottom: 100px;
+        }
+        .tweet-card { 
+            background: #1a1a1a; 
+            padding: 1.5rem; 
+            margin-bottom: 1rem; 
+            border-radius: 12px; 
+            border: 1px solid #333;
+            transition: background 0.2s;
+        }
+        .tweet-card:hover { background: #222; }
+        .tweet-header { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 1rem; 
+        }
+        .user-info { margin-left: 0.75rem; flex: 1; }
+        .display-name { 
+            font-weight: bold; 
+            font-size: 1rem;
+        }
+        .tweet-content { 
+            margin: 1rem 0; 
+            line-height: 1.5; 
+            font-size: 1rem;
+        }
+        .tweet-media {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+        .tweet-stats { 
+            display: flex; 
+            gap: 2rem; 
+            color: #666; 
+            font-size: 0.9rem; 
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #333;
+        }
+        .bottom-nav { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: #1a1a1a; 
+            display: flex; 
+            justify-content: space-around; 
+            padding: 1rem;
+            border-top: 1px solid #333;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #666;
+            font-size: 0.8rem;
+        }
+        .nav-item.active { color: #1d9bf0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>タイムライン</h1>
+        <p style="color: #666; font-size: 0.9rem;">0件のツイート</p>
+    </div>
+    <div class="followers-row"></div>
+    <div class="timeline"></div>
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <span>🏠</span>
+            <span>ホーム</span>
+        </div>
+        <div class="nav-item">
+            <span>🔍</span>
+            <span>検索</span>
+        </div>
+        <div class="nav-item">
+            <span>👥</span>
+            <span>フォロワー</span>
+        </div>
+    </div>
+    <script>
+        function filterByUser(username) {
+            const tweets = document.querySelectorAll('.tweet-card');
+            const followers = document.querySelectorAll('.follower-item');
+            
+            followers.forEach(item => {
+                if (item.onclick.toString().includes(username)) {
+                    item.classList.toggle('selected');
+                    const checkmark = item.querySelector('.checkmark');
+                    if (checkmark) checkmark.classList.toggle('selected');
+                }
+            });
+            
+            const selectedUsers = Array.from(followers)
+                .filter(item => item.classList.contains('selected'))
+                .map(item => {
+                    const match = item.onclick.toString().match(/filterByUser\('([^']+)'\)/);
+                    return match ? match[1] : null;
+                })
+                .filter(Boolean);
+            
+            tweets.forEach(tweet => {
+                const user = tweet.dataset.user;
+                if (selectedUsers.length === 0 || selectedUsers.includes(user)) {
+                    tweet.style.display = 'block';
+                } else {
+                    tweet.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
